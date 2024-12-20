@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "957546529821",
+    "project_id": "burtone-app",
+    "storage_bucket": "burtone-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:957546529821:android:44d8e71b39cf3aa53432f4",
+        "android_client_info": {
+          "package_name": "com.burtonesolutions.burtone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW2AIY8F3ylAvAfOGJs6rJdmzg1hBjTQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
