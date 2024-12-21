@@ -521,11 +521,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 decoration: InputDecoration(
                   labelText: 'Payment Method',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
                       color: _type == TransactionType.sale ? brandTeal : Colors.red,
                       width: 2,
@@ -574,14 +574,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 backgroundColor: _type == TransactionType.sale ? brandTeal : Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                elevation: 0,
+                shadowColor: Colors.transparent,
               ),
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : Text(
                       _type == TransactionType.sale ? 'Save Revenue' : 'Save Expense',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
             ),
           ),

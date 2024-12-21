@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/client.dart';
+import '../../../widgets/notion_card.dart';
 
 class ClientSummaryCard extends StatelessWidget {
   final List<Client> clients;
@@ -14,81 +15,98 @@ class ClientSummaryCard extends StatelessWidget {
     final activeClients = clients.where((c) => c.activityStatus == ClientActivityStatus.active).length;
     final inactiveClients = clients.where((c) => c.activityStatus == ClientActivityStatus.inactive).length;
     final semiActiveClients = clients.where((c) => c.activityStatus == ClientActivityStatus.semiActive).length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
 
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Client Summary',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Client Summary',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 16),
-            _buildMetricRow(
-              'Total Clients',
-              clients.length.toString(),
-              Icons.people,
-              Colors.blue,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              'Active Clients',
-              activeClients.toString(),
-              Icons.person_outline,
-              Colors.green,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              'Semi-Active Clients',
-              semiActiveClients.toString(),
-              Icons.person_outline,
-              Colors.orange,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              'Inactive Clients',
-              inactiveClients.toString(),
-              Icons.person_off_outlined,
-              Colors.red,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          _buildMetricRow(
+            'Total Clients',
+            clients.length.toString(),
+            Icons.people,
+            Colors.blue.withOpacity(0.8),
+            context,
+          ),
+          const SizedBox(height: 16),
+          _buildMetricRow(
+            'Active Clients',
+            activeClients.toString(),
+            Icons.person_outline,
+            Colors.green.withOpacity(0.8),
+            context,
+          ),
+          const SizedBox(height: 16),
+          _buildMetricRow(
+            'Semi-Active Clients',
+            semiActiveClients.toString(),
+            Icons.person_outline,
+            Colors.orange.withOpacity(0.8),
+            context,
+          ),
+          const SizedBox(height: 16),
+          _buildMetricRow(
+            'Inactive Clients',
+            inactiveClients.toString(),
+            Icons.person_outline,
+            Colors.red.withOpacity(0.8),
+            context,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMetricRow(String label, String value, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+  Widget _buildMetricRow(String label, String value, IconData icon, Color color, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white70 : Colors.black54;
+
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          Text(
-            value,
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            label,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
+              color: textColor,
             ),
           ),
-        ],
-      ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

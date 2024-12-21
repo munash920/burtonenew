@@ -10,28 +10,32 @@ import 'app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // Initialize services
-  final prefs = await SharedPreferences.getInstance();
-  final firebaseService = FirebaseService();
-  final notificationService = NotificationService();
+    // Initialize services
+    final prefs = await SharedPreferences.getInstance();
+    final firebaseService = FirebaseService();
+    final notificationService = NotificationService();
 
-  // Run app with DevicePreview
-  runApp(
-    DevicePreview(
-      enabled: true,
-      tools: const [
-        ...DevicePreview.defaultTools,
-      ],
-      builder: (context) => App(
-        prefs: prefs,
-        firebaseService: firebaseService,
-        notificationService: notificationService,
+    // Run app with DevicePreview
+    runApp(
+      DevicePreview(
+        enabled: true,
+        tools: const [
+          ...DevicePreview.defaultTools,
+        ],
+        builder: (context) => App(
+          prefs: prefs,
+          firebaseService: firebaseService,
+          notificationService: notificationService,
+        ),
       ),
-    ),
-  );
+    );
+  } catch (e) {
+    print('Error during initialization: $e');
+  }
 }

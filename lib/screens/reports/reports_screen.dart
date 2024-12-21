@@ -233,121 +233,439 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return clientRevenue;
   }
 
+  Map<String, double> _calculateExpensesByCategory(List<BusinessTransaction> transactions) {
+    final expensesByCategory = <String, double>{};
+    final expenses = transactions.where((t) => t.type == TransactionType.expense);
+    
+    for (var expense in expenses) {
+      final category = expense.category ?? 'Other';
+      expensesByCategory[category] = (expensesByCategory[category] ?? 0) + expense.amount;
+    }
+    
+    return Map.fromEntries(
+      expensesByCategory.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value))
+    );
+  }
+
+  Map<String, double> _calculateTopExpenses(List<BusinessTransaction> transactions) {
+    final expenses = transactions
+        .where((t) => t.type == TransactionType.expense)
+        .toList()
+        ..sort((a, b) => b.amount.compareTo(a.amount));
+    
+    return Map.fromEntries(
+      expenses.take(5).map((e) => MapEntry(e.description, e.amount))
+    );
+  }
+
   Widget _buildRevenueByServiceCard(Map<ServiceType, double> revenueByService) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.pie_chart, color: Colors.teal),
-                const SizedBox(width: 8),
-                const Text(
-                  'Revenue by Service Type',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Revenue by Service',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
             ),
-            const Divider(height: 24),
-            ...revenueByService.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(entry.key.toString().split('.').last),
-                    Text(
-                      NumberFormat.currency(symbol: '\$').format(entry.value),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          ...revenueByService.entries.map((entry) {
+            final serviceName = entry.key.toString().split('.').last;
+            final color = _getServiceColor(entry.key);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+                    child: Icon(
+                      _getServiceIcon(entry.key),
+                      color: color.withOpacity(0.8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      serviceName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '\$').format(entry.value),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: color.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpensesByCategoryCard(Map<String, double> expensesByCategory) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Expenses by Category',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          ...expensesByCategory.entries.map((entry) {
+            final color = _getExpenseCategoryColor(entry.key);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getExpenseCategoryIcon(entry.key),
+                      color: color.withOpacity(0.8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '\$').format(entry.value),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: color.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
 
   Widget _buildMonthlyRevenueCard(Map<String, double> monthlyRevenue) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Monthly Revenue',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final accentColor = isDark ? Colors.blue.shade300 : Colors.blue.shade700;
+
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Monthly Revenue',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 16),
-            ...monthlyRevenue.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(entry.key),
-                    Text(
-                      NumberFormat.currency(symbol: '\$').format(entry.value),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          ...monthlyRevenue.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+                    child: Icon(
+                      Icons.calendar_today,
+                      color: accentColor.withOpacity(0.8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '\$').format(entry.value),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }
 
   Widget _buildTopClientsCard(Map<String, double> clientRevenue) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final accentColor = isDark ? Colors.green.shade300 : Colors.green.shade700;
+
     final sortedClients = clientRevenue.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final topClients = sortedClients.take(5).toList();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Top 5 Clients by Revenue',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Top 5 Clients by Revenue',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 16),
-            ...topClients.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        entry.key,
-                        overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          ...topClients.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.person_outline,
+                      color: accentColor.withOpacity(0.8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 16),
-                    Text(
-                      NumberFormat.currency(symbol: '\$').format(entry.value),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '\$').format(entry.value),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor.withOpacity(0.8),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
       ),
     );
+  }
+
+  Widget _buildTopExpensesCard(Map<String, double> topExpenses) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final accentColor = isDark ? Colors.red.shade300 : Colors.red.shade700;
+
+    return NotionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Top 5 Expenses',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: isDark ? Colors.white24 : Colors.black12),
+          const SizedBox(height: 16),
+          ...topExpenses.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.receipt_long,
+                      color: accentColor.withOpacity(0.8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '\$').format(entry.value),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Color _getServiceColor(ServiceType type) {
+    switch (type) {
+      case ServiceType.registration:
+        return Colors.blue;
+      case ServiceType.reregistration:
+        return Colors.purple;
+      case ServiceType.tax_clearance:
+        return Colors.orange;
+      case ServiceType.tax_returns:
+        return Colors.teal;
+      case ServiceType.annual_returns:
+        return Colors.indigo;
+      case ServiceType.bookkeeping:
+        return Colors.brown;
+    }
+  }
+
+  IconData _getServiceIcon(ServiceType type) {
+    switch (type) {
+      case ServiceType.registration:
+        return Icons.app_registration;
+      case ServiceType.reregistration:
+        return Icons.autorenew;
+      case ServiceType.tax_clearance:
+        return Icons.check_circle_outline;
+      case ServiceType.tax_returns:
+        return Icons.description_outlined;
+      case ServiceType.annual_returns:
+        return Icons.calendar_today;
+      case ServiceType.bookkeeping:
+        return Icons.book_outlined;
+    }
+  }
+
+  Color _getExpenseCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'operating':
+        return Colors.blue;
+      case 'marketing':
+        return Colors.purple;
+      case 'distribution':
+        return Colors.orange;
+      case 'utilities':
+        return Colors.teal;
+      case 'rent':
+        return Colors.indigo;
+      case 'salaries':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getExpenseCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'operating':
+        return Icons.business;
+      case 'marketing':
+        return Icons.campaign;
+      case 'distribution':
+        return Icons.local_shipping;
+      case 'utilities':
+        return Icons.power;
+      case 'rent':
+        return Icons.home;
+      case 'salaries':
+        return Icons.people;
+      default:
+        return Icons.receipt;
+    }
   }
 
   @override
@@ -424,6 +742,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final revenueByService = _calculateRevenueByService(transactions);
           final monthlyRevenue = _calculateMonthlyRevenue(transactions);
           final clientRevenue = _calculateClientRevenue(transactions);
+          final expensesByCategory = _calculateExpensesByCategory(transactions);
+          final topExpenses = _calculateTopExpenses(transactions);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -444,9 +764,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 const SizedBox(height: 16),
                 _buildRevenueByServiceCard(revenueByService),
                 const SizedBox(height: 16),
+                _buildExpensesByCategoryCard(expensesByCategory),
+                const SizedBox(height: 16),
                 _buildMonthlyRevenueCard(monthlyRevenue),
                 const SizedBox(height: 16),
                 _buildTopClientsCard(clientRevenue),
+                const SizedBox(height: 16),
+                _buildTopExpensesCard(topExpenses),
               ],
             ),
           );
@@ -462,6 +786,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
           );
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class NotionCard extends StatelessWidget {
+  final Widget child;
+
+  const NotionCard({Key? key, required this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? Colors.grey.shade800 : Colors.white;
+    final borderColor = isDark ? Colors.white24 : Colors.black12;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: backgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: child,
       ),
     );
   }

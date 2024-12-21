@@ -106,18 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: borderColor),
-                          ),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            height: 48,
-                            color: primaryColor,
-                          ),
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 48,
+                          color: primaryColor,
                         ),
                         const SizedBox(height: 32),
                         Text(
